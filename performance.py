@@ -1,5 +1,5 @@
 # performance.py
-
+APP_ALT_FT = 6000
 def calculate_thrust(h_ft, aircraft_data):
     """
     Calcula el empuje máximo y el empuje de descenso asumiendo idle thrust
@@ -11,7 +11,7 @@ def calculate_thrust(h_ft, aircraft_data):
     # 3 Fases del régimen de empuje BADA:
     if h_ft >= aircraft_data['hp_desc']:
         CT_desc = aircraft_data['CT_desc_high']
-    elif h_ft >= 8000:
+    elif h_ft >= APP_ALT_FT:
         CT_desc = aircraft_data['CT_desc_low']
     else:
         CT_desc = aircraft_data['CT_desc_app']
@@ -28,8 +28,7 @@ def calculate_drag(rho, v_tas, S, m, h_ft, aircraft_data):
     """
     Calcula la resistencia aerodinámica (Drag)
     """
-    # Los flaps (Approach) solo se despliegan por debajo de los 8000 ft
-    if h_ft < 8000:
+    if h_ft < APP_ALT_FT:
         CD0 = aircraft_data['CD0_app']
         CD2 = aircraft_data['CD2_app']
     else:
