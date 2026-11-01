@@ -1,6 +1,15 @@
-# aircraft_data.py
-# Base de datos de aviones (BADA) extraída de los parámetros del simulador
-
+"""
+Base de datos de rendimiento de las respectivas aeronaves basado en el modelo BADA.
+Cada aeronave es un diccionario con:
+MLW: Maximum Landing Weight [kg]
+S: Superficie Alar [m^2]
+CDO_*, CD2_*: Coeficientes de resistencia parabólica (CD = CDO + CD2*CL^2), tanto en configuración limpia como en aproximación
+hp_desc: Altitud de transición del empuje en descenso [ft]
+CT_desc_*: Factor de empuje en descenso (idle) sobre empuje máximo:
+high (sobre hp_desc), low (entre 6000ft y hp_desc) y app (inferior a 6000ft)
+CT*: Coeficientes de empuje máximo (CT1 [N], CT2[ft], CT3[1/(ft^2)])
+CF1 [kg/(min·kN)], CF2 [kt]: Coeficientes del consumo específico
+"""
 aircraft_db = {
     'B767-300ER': {
         'MLW': 145150,
@@ -15,7 +24,9 @@ aircraft_db = {
         'CT_desc_app': 0.12475,
         'CT1': 351670.0,
         'CT2': 44673.0,
-        'CT3': 0.10129e-9
+        'CT3': 0.10129e-9,
+        'CF1': 0.54005,
+        'CF2': 0.55782e3,
     },
     'B777-300': {
         'MLW': 237680,
@@ -30,7 +41,9 @@ aircraft_db = {
         'CT_desc_app': 0.092921,
         'CT1': 425770.0,
         'CT2': 48987.0,
-        'CT3': 0.66146e-10
+        'CT3': 0.66146e-10,
+        'CF1': 0.87843,
+        'CF2': 0.36897e4,
     },
     'B737': {
         'MLW': 51710,
@@ -45,7 +58,9 @@ aircraft_db = {
         'CT_desc_app': 0.16440,
         'CT1': 145730.0,
         'CT2': 55638.0,
-        'CT3': 0.14200e-10
+        'CT3': 0.14200e-10,
+        'CF1': 0.94680,
+        'CF2': 0.10000e15,
     },
     'A320-212': {
         'MLW': 64500,
@@ -60,7 +75,9 @@ aircraft_db = {
         'CT_desc_app': 0.13981,
         'CT1': 136050.0,
         'CT2': 52238.0,
-        'CT3': 0.26637e-10
+        'CT3': 0.26637e-10,
+        'CF1': 0.94000,
+        'CF2': 0.10000e6,
     },
     'A319-131': {
         'MLW': 61000,
@@ -75,9 +92,15 @@ aircraft_db = {
         'CT_desc_app': 0.14767,
         'CT1': 139000.0,
         'CT2': 58900.0,
-        'CT3': 0.57200e-14
+        'CT3': 0.57200e-14,
+        'CF1': 0.68800,
+        'CF2': 0.16700e4,
     }
 }
 
 def get_aircraft_data(model):
+    """
+    Devuelve el diccionario de los parámetros de la aeronave a partir del input model (string).
+    En caso de que no se encuentre en el modelo devuelve None, cosa que no sucede en el simulador.
+    """
     return aircraft_db.get(model, None)

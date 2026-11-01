@@ -1,14 +1,21 @@
-# main.py
 import matplotlib.pyplot as plt
 from getCDO import getCDO
 from scenarios import run_scenarios
 
 
 def main():
-    # Escenarios 1 y 2 (apartado 3 del SoW): tiempos al IAF y secuenciación
+    """
+    Función principal del programa.
+
+    Llama en primer lugar a la función run_scenarios() de scenarios.py, que calcula y muestra
+    los resultados de cada escenario en consola.
+
+    Después, para poder dibujar el gráfico para cada modelo y peso, se llama a la función getCDO()
+    en cada caso para conseguir la trayectoria y graficarla.
+    """
     run_scenarios()
 
-    # Incluimos todos los modelos de aeronaves para la iteración
+    # Los modelos de aeronaves y pesos para el bucle
     aircrafts = ['B767-300ER', 'B777-300', 'B737', 'A320-212', 'A319-131']
     weights = [100, 80]
 
@@ -24,12 +31,11 @@ def main():
             except Exception as e:
                 print(f"No se pudo simular {model} al {w}%: {e}")
 
-    # Damos el formato preciso a la gráfica
+    # Formato de la gràfica y leyenda
     plt.title("Simulador de Operación de Descenso Continuo (CDO)")
     plt.xlabel("x [m]")
     plt.ylabel("h [m]")
 
-    # Movemos la leyenda y ajustamos los límites para mayor claridad visual
     plt.legend(loc='upper right', fontsize=9)
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.show()

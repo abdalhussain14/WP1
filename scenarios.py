@@ -1,31 +1,35 @@
-# scenarios.py
 # Escenarios 1 y 2 del WP1 (llegadas simultáneas y secuenciación a 2 min en el IAF)
 import numpy as np
 from getCDO import getCDO
-from star_data import (arrivals, star_distance_nm, T_ENTRY_S1, SEPARATION_S2,
-                       USAR_DISTANCIAS_DEMO)
+from star_data import arrivals, star_distance_nm, T_ENTRY_S1, SEPARATION_S2
 
 NM_TO_M = 1852.0
 M_TO_FT = 1 / 0.3048
 
 
 def fmt_time(t_s):
-    """Segundos desde las 00:00:00 -> 'HH:MM:SS'."""
+    """Pasa segundos desde las 00:00:00 a texto HH:MM:SS"""
     t_s = int(round(t_s))
     return f"{t_s // 3600:02d}:{(t_s % 3600) // 60:02d}:{t_s % 60:02d}"
 
 
 def fmt_delta(dt_s):
-    """Diferencia en segundos -> '+mm:ss' / '-mm:ss'."""
-    sign = '+' if dt_s >= 0 else '-'
+    """Pasa de una diferencia de segundos a texto con signo -> '+mm:ss' / '-mm:ss'."""
+    if dt_s >= 0:
+        sign = '+'
+    else:
+        sign = '-'
     dt_s = int(round(abs(dt_s)))
     return f"{sign}{dt_s // 60:02d}:{dt_s % 60:02d}"
 
 
 def entry_point_data(x, h, t, distance_m):
     """
-    A partir de la trayectoria (x [m], h [m], t [s]) de getCDO, devuelve la altitud
-    [ft] y el tiempo de vuelo [s] hasta el IAF en el punto situado a distance_m del IAF.
+    Función que, partiendo de la trayectoria (x, h, t) y la distancia de la STAR, calcula
+    y devuelve tanto la altitud [ft] en el punto de entrada de la STAR como el tiempo de vuelo [s]
+    entre el punto de entrada de la STAR y el IAF.
+
+    Calcula estos valores mediante interpolaciones lineales.
     """
     d_traj = -np.array(x)  # distancia al IAF (positiva, creciente)
     if distance_m > d_traj[-1]:
@@ -39,9 +43,12 @@ def entry_point_data(x, h, t, distance_m):
 
 def compute_scenario1():
     """
-    Escenario 1: todos los aviones están en el primer WP de su STAR a las 11:45:00.
-    Devuelve una lista de dicts (uno por llegada) con altitud en el STAR entry,
-    tiempo de vuelo hasta el IAF y hora de llegada al IAF.
+    Escenario 1: todas las arrivals están en el primer WP de su STAR a las 11:45:00.
+
+    Por cada arrival en star_data simula el CDO, calcula la altura de entrada a la STAR y
+    el tiempo en el que llega a al IAF, sumando el tiempo de vuelo a 11:45:00.
+
+    Devuelve una lista con los resultados para cada arrival de star_data.
     """
     results = []
     for arr in arrivals:
@@ -61,17 +68,20 @@ def compute_scenario1():
 
 def compute_scenario2(res1):
     """
-    Escenario 2: separación exacta de SEPARATION_S2 en el IAF, mismo orden de llegada
-    que el escenario 1 y sin ajustar el primer avión.
-    Devuelve una lista (en orden de llegada al IAF) con la nueva hora en el STAR entry,
-    el ajuste respecto al escenario 1 y la hora en el IAF.
+    Escenario 2: separación exacta de SEPARATION_S2 en el IAF.
+
+    Ordenamos en primer lugar las arrivals del escenario 1 por tiempo de llegada al IAF.
+    A cada arrival (excepto la primera) le añadimos SEPARATION_S2 al tiempo en IAF y calculamos el nuevo tiempo en entry,
+    sabiendo que ni el tiempo de vuelo ni la altura de entrada cambian.
+
+    También al resultado obtenido le añadimos una propiedad adjust_s, que resta el tiempo real en el entry del previsto (11:45:00).
     """
-    order = sorted(res1, key=lambda r: r['t_iaf_s'])  # orden de llegada al IAF (esc. 1)
+    order = sorted(res1, key=lambda r: r['t_iaf_s'])  # Devuelve la lista de resultados del escenario 1 ordenada por t_iaf_s
     t_iaf_first = order[0]['t_iaf_s']
 
     results = []
     for k, r in enumerate(order):
-        t_iaf_new = t_iaf_first + k * SEPARATION_S2
+        t_iaf_new = t_iaf_first + k * SEPARATION_S2 # Nuevo tiempo en IAF (para el primero es el mismo)
         t_entry_new = t_iaf_new - r['t_flight_s']  # el tiempo de vuelo no cambia
         results.append({
             **r,
@@ -83,6 +93,9 @@ def compute_scenario2(res1):
     return results
 
 
+"""
+Funciones para mostrar en consola los resultados de cada escenario
+"""
 def print_scenario1(res1):
     print("\n=== ESCENARIO 1: llegadas simultáneas al STAR entry (11:45:00) ===")
     print(f"{'STAR':<9}{'Avión':<12}{'%MLW':>5}{'Dist[NM]':>9}{'Alt entry[ft]':>15}"
@@ -109,9 +122,10 @@ def print_scenario2(res2):
 
 
 def run_scenarios():
-    if USAR_DISTANCIAS_DEMO:
-        print("*** AVISO: se usan distancias de STAR DE EJEMPLO (star_data.py). "
-              "Los resultados NO son válidos hasta poner las distancias reales. ***")
+    """
+    Función que ejecuta cada escenario y escribe en consola los resultados.
+    Se ejecuta en la función main del programa.
+    """
     res1 = compute_scenario1()
     res2 = compute_scenario2(res1)
     print_scenario1(res1)
